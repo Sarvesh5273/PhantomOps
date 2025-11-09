@@ -1,0 +1,14 @@
+# Ignore all .env files anywhere in the project
+.env
+
+# Ignore Python virtual environment
+venv/
+
+# Ignore Python cache
+__pycache__/
+
+# Ignore NodeJS dependencies
+node_modules/
+
+# Ignore compiled frontend build
+dist/
