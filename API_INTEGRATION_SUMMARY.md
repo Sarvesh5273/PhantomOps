@@ -196,14 +196,13 @@ for post in subreddit.search("emergency", limit=5):
 
 ```bash
 # In browser or curl
-https://api.openweathermap.org/data/2.5/weather?lat=40.7128&lon=-74.0060&appid=6c31d6bfff3204a47e20dad4177fd30c&units=metric
+
 ```
 
 ### 3. Test RSS Feed
 
 ```bash
 # In browser
-https://feeds.bbci.co.uk/news/world/rss.xml
 ```
 
 ---
