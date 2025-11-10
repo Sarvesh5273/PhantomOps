@@ -19,51 +19,61 @@ def verify_enrichment_dependencies():
     and that environment variables are configured.
     """
     dependencies_status = {
-        "tweepy": False,
-        "googlemaps": False,
-        "feedparser": False
+        "praw": False,
+        "feedparser": False,
+        "requests": False
     }
     
     env_vars_status = {
-        "TWITTER_BEARER_TOKEN": False,
-        "GOOGLE_MAPS_API_KEY": False,
+        "REDDIT_CLIENT_ID": False,
+        "REDDIT_CLIENT_SECRET": False,
+        "REDDIT_USER_AGENT": False,
+        "OPENWEATHERMAP_API_KEY": False,
         "RSS_FEED_URL": False
     }
     
     # Check library imports
     try:
-        import tweepy
-        dependencies_status["tweepy"] = True
+        import praw
+        dependencies_status["praw"] = True
     except ImportError:
-        print("⚠️  WARNING: tweepy library not installed. Run: pip install tweepy==4.14.0")
-    
-    try:
-        import googlemaps
-        dependencies_status["googlemaps"] = True
-    except ImportError:
-        print("⚠️  WARNING: googlemaps library not installed. Run: pip install googlemaps==4.10.0")
+        print("⚠️  WARNING: praw library not installed. Run: pip install praw")
     
     try:
         import feedparser
         dependencies_status["feedparser"] = True
     except ImportError:
-        print("⚠️  WARNING: feedparser library not installed. Run: pip install feedparser==6.0.10")
+        print("⚠️  WARNING: feedparser library not installed. Run: pip install feedparser")
+
+    try:
+        import requests
+        dependencies_status["requests"] = True
+    except ImportError:
+        print("⚠️  WARNING: requests library not installed. Run: pip install requests")
     
     # Check environment variables
-    twitter_token = os.getenv("TWITTER_BEARER_TOKEN")
-    if twitter_token and twitter_token != "your_twitter_bearer_token_here":
-        env_vars_status["TWITTER_BEARER_TOKEN"] = True
+    if os.getenv("REDDIT_CLIENT_ID"):
+        env_vars_status["REDDIT_CLIENT_ID"] = True
     else:
-        print("⚠️  WARNING: TWITTER_BEARER_TOKEN not configured in .env")
+        print("⚠️  WARNING: REDDIT_CLIENT_ID not configured in .env")
+
+    if os.getenv("REDDIT_CLIENT_SECRET"):
+        env_vars_status["REDDIT_CLIENT_SECRET"] = True
+    else:
+        print("⚠️  WARNING: REDDIT_CLIENT_SECRET not configured in .env")
+
+    if os.getenv("REDDIT_USER_AGENT"):
+        env_vars_status["REDDIT_USER_AGENT"] = True
+    else:
+        print("⚠️  WARNING: REDDIT_USER_AGENT not configured in .env")
     
-    google_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    if google_key and google_key != "your_google_maps_api_key_here":
-        env_vars_status["GOOGLE_MAPS_API_KEY"] = True
+    if os.getenv("OPENWEATHERMAP_API_KEY"):
+        env_vars_status["OPENWEATHERMAP_API_KEY"] = True
     else:
-        print("⚠️  WARNING: GOOGLE_MAPS_API_KEY not configured in .env")
+        print("⚠️  WARNING: OPENWEATHERMAP_API_KEY not configured in .env")
     
     rss_url = os.getenv("RSS_FEED_URL")
-    if rss_url and rss_url != "https://example.com/local-news-feed.rss":
+    if rss_url and "example.com" not in rss_url: # Check it's not a placeholder
         env_vars_status["RSS_FEED_URL"] = True
     else:
         print("⚠️  WARNING: RSS_FEED_URL not configured in .env")
