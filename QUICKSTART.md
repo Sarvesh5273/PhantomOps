@@ -36,7 +36,6 @@ Create `backend/.env` with your credentials:
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_JWT_SECRET=your_jwt_secret
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # External APIs (optional for basic testing)
 REDDIT_CLIENT_ID=your_reddit_id

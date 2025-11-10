@@ -6,8 +6,8 @@
 
 
 
-  - Install new Python libraries: tweepy, googlemaps, feedparser
-  - Add new environment variables to backend/.env: TWITTER_BEARER_TOKEN, GOOGLE_MAPS_API_KEY, RSS_FEED_URL
+  - Install new Python libraries: praw, feedparser, requests
+  - Add new environment variables to backend/.env: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT, OPENWEATHERMAP_API_KEY, RSS_FEED_URL
   - Verify all dependencies load correctly on Flask startup
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
@@ -23,25 +23,25 @@
     - Register blueprint in backend/app.py
     - _Requirements: 5.1, 5.2_
 
-  - [x] 2.2 Implement Twitter/X service integration function
+  - [x] 2.2 Implement Reddit service integration function
 
 
-    - Create function to fetch geotagged tweets using tweepy library
-    - Filter tweets within 2km radius of incident coordinates
-    - Filter tweets from last 24 hours
-    - Parse response to extract username, text, timestamp, location
-    - Return list of up to 5 TwitterPost objects
+    - Create function to fetch Reddit posts using praw library
+    - Search emergency-related subreddits (news, worldnews, emergencies, PublicFreakout)
+    - Filter posts from last 24 hours
+    - Parse response to extract username, title, timestamp, subreddit, URL
+    - Return list of up to 5 RedditPost objects
     - Handle API errors and rate limiting gracefully
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.1, 6.5_
 
-  - [x] 2.3 Implement Google Maps traffic service integration function
+  - [x] 2.3 Implement OpenWeatherMap service integration function
 
 
-    - Create function to generate Static Maps API URL with traffic styling
-    - Center map on incident coordinates with appropriate zoom level
-    - Add red marker at incident location
-    - Return complete image URL string
-    - Handle API key validation errors
+    - Create function to fetch weather data using requests library
+    - Call OpenWeatherMap Current Weather API with incident coordinates
+    - Extract temperature, feels_like, humidity, wind_speed, description, icon
+    - Return WeatherData object
+    - Handle API key validation errors and timeouts
     - _Requirements: 3.1, 3.2, 3.3, 6.2, 6.5_
 
   - [x] 2.4 Implement RSS feed parser integration function
@@ -61,7 +61,7 @@
     - Add verify_jwt_from_request decorator for authentication
     - Fetch incident record from Supabase to get latitude/longitude
     - Execute all three external service calls in parallel using ThreadPoolExecutor
-    - Aggregate results into single JSON response with twitter_posts, traffic_map_url, news_items
+    - Aggregate results into single JSON response with reddit_posts, weather_data, news_items
     - Include errors object for partial failure handling
     - Return 404 if incident not found, 200 with partial data if services fail
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 2.5, 3.5, 4.4_
@@ -76,7 +76,7 @@
     - Define functional component with incidentId, onClose, incidentData props
     - Implement modal overlay with dark background and centered card
     - Add header with incident ID title and close button
-    - Create three-section grid layout for social media, traffic, and news
+    - Create three-section grid layout for social media, weather, and news
     - Apply consistent styling with AdminDashboard dark theme
     - _Requirements: 1.1, 1.2, 7.5_
 
@@ -92,19 +92,20 @@
 
 
   - [x] 3.3 Implement social media posts section rendering
-    - Display "🐦 Social Media Posts" section title
-    - Map over twitter_posts array to render tweet cards
-    - Display username, timestamp, and text for each tweet
+    - Display "💬 Reddit Discussion" section title
+    - Map over reddit_posts array to render post cards
+    - Display username, subreddit, title, timestamp, and link for each post
     - Show "No social media posts found" message when array is empty
-    - Handle null or error state for twitter section
+    - Handle null or error state for reddit section
     - _Requirements: 2.4, 2.5_
 
 
-  - [x] 3.4 Implement traffic map section rendering
-    - Display "🚗 Traffic Conditions" section title
-    - Render static map image using traffic_map_url
-    - Add alt text and error handling for image load failures
-    - Show error message if traffic_map_url is null
+  - [x] 3.4 Implement weather data section rendering
+    - Display "🌤️ Weather Conditions" section title
+    - Render weather data with temperature, feels like, humidity, wind speed
+    - Display weather description and icon from OpenWeatherMap
+    - Show location name
+    - Show error message if weather_data is null
     - _Requirements: 3.4, 3.5_
 
 
@@ -170,8 +171,8 @@
 
   - [x] 5.1 Test backend enrichment endpoint with real API credentials
 
-    - Verify Twitter API returns geotagged tweets within 2km radius
-    - Verify Google Maps returns valid static map URL
+    - Verify Reddit API returns posts from emergency subreddits
+    - Verify OpenWeatherMap returns valid weather data
     - Verify RSS feed parser returns news items
     - Test error handling when external services fail
     - Test JWT authentication on enrichment endpoint

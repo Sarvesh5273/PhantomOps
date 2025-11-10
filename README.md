@@ -135,7 +135,6 @@ Create `backend/.env`:
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_JWT_SECRET=your_jwt_secret
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # External API Keys (for enrichment feature)
 REDDIT_CLIENT_ID=your_reddit_client_id

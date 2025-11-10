@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Incident Enrichment Panel feature adds real-time validation capabilities to PhantomOps by integrating three external data sources: Twitter/X social media posts, Google Maps traffic data, and local news RSS feeds. When an admin clicks on an incident in the AdminDashboard table, a modal overlay displays enriched context that helps validate the incident's authenticity and assess its real-world impact.
+The Incident Enrichment Panel feature adds real-time validation capabilities to PhantomOps by integrating three external data sources: Reddit social media posts, OpenWeatherMap weather data, and local news RSS feeds. When an admin clicks on an incident in the AdminDashboard table, a modal overlay displays enriched context that helps validate the incident's authenticity and assess its real-world impact.
 
 This design follows the existing PhantomOps architecture patterns: React functional components with hooks on the frontend, Flask blueprints with JWT-protected routes on the backend, and the apiClient utility for all API communication.
 
@@ -19,9 +19,9 @@ apiClient.get('/api/incidents/:id/enrich')
     ↓
 enrichment_routes.py (Flask blueprint)
     ↓
-Parallel/Sequential External API Calls:
-    - Twitter/X API (tweepy)
-    - Google Maps Static API (googlemaps library)
+Parallel External API Calls (ThreadPoolExecutor):
+    - Reddit API (praw)
+    - OpenWeatherMap API (requests)
     - RSS Feed Parser (feedparser)
     ↓
 Aggregated JSON Response
@@ -50,7 +50,7 @@ EnrichmentPanel displays data sections
 - `incidentData` (object, required): The full incident record including lat/long
 
 **State:**
-- `enrichmentData` (object): Stores the API response with twitter_posts, traffic_map_url, news_items
+- `enrichmentData` (object): Stores the API response with reddit_posts, weather_data, news_items
 - `loading` (boolean): Tracks API request status
 - `error` (string): Stores error messages
 
@@ -69,12 +69,12 @@ Modal Overlay (dark background)
       ├─ Error State (SweetAlert2 notification)
       └─ Content Grid (3 sections)
           ├─ Social Media Section
-          │   ├─ Section Title: "🐦 Social Media Posts"
-          │   └─ Tweet List (5 items max)
-          │       └─ Tweet Card: username, timestamp, text
-          ├─ Traffic Section
-          │   ├─ Section Title: "🚗 Traffic Conditions"
-          │   └─ Static Map Image
+          │   ├─ Section Title: "💬 Reddit Discussion"
+          │   └─ Reddit Post List (5 items max)
+          │       └─ Post Card: username, subreddit, title, timestamp, link
+          ├─ Weather Section
+          │   ├─ Section Title: "🌤️ Weather Conditions"
+          │   └─ Weather Display: temperature, feels like, humidity, wind, description, icon
           └─ News Section
               ├─ Section Title: "📰 Local News"
               └─ News List (5 items max)
@@ -121,16 +121,27 @@ Modal Overlay (dark background)
 ```json
 {
   "incident_id": 123,
-  "twitter_posts": [
+  "reddit_posts": [
     {
-      "id": "tweet_id",
-      "username": "@user",
-      "text": "Tweet content...",
+      "id": "post_id",
+      "username": "u/user",
+      "text": "Post title...",
       "created_at": "2025-11-09T10:30:00Z",
-      "location": "lat,long"
+      "subreddit": "r/news",
+      "url": "https://reddit.com/r/news/comments/..."
     }
   ],
-  "traffic_map_url": "https://maps.googleapis.com/maps/api/staticmap?...",
+  "weather_data": {
+    "temperature": 22.5,
+    "feels_like": 21.0,
+    "humidity": 65,
+    "pressure": 1013,
+    "description": "partly cloudy",
+    "icon": "02d",
+    "wind_speed": 3.5,
+    "clouds": 40,
+    "location": "New York"
+  },
   "news_items": [
     {
       "title": "News headline",
@@ -139,8 +150,8 @@ Modal Overlay (dark background)
     }
   ],
   "errors": {
-    "twitter": null,
-    "traffic": null,
+    "reddit": null,
+    "weather": null,
     "news": "RSS feed unavailable"
   }
 }
@@ -153,39 +164,33 @@ Modal Overlay (dark background)
 
 #### External Service Integration
 
-**Twitter/X Integration (tweepy library):**
-- Use Twitter API v2 with OAuth 2.0 Bearer Token
-- Search endpoint: `/2/tweets/search/recent`
-- Query parameters:
-  - `query`: `point_radius:[longitude latitude 2km]`
-  - `start_time`: 24 hours ago (ISO 8601 format)
-  - `max_results`: 5
-  - `tweet.fields`: created_at,author_id,geo
-  - `expansions`: author_id
-- Parse response to extract username, text, timestamp
+**Reddit Integration (praw library):**
+- Use Reddit API with OAuth 2.0 (client credentials flow)
+- Search emergency-related subreddits: news, worldnews, emergencies, PublicFreakout
+- Search query: "emergency OR incident OR fire"
+- Time filter: last 24 hours
+- Limit: 5 posts total across all subreddits
+- Extract: post ID, author username, title, created timestamp, subreddit, permalink
+- Handle rate limiting (60 requests per minute)
 
-**Google Maps Integration (googlemaps library):**
-- Use Static Maps API
-- Request URL format:
-  ```
-  https://maps.googleapis.com/maps/api/staticmap?
-    center={latitude},{longitude}
-    &zoom=15
-    &size=600x400
-    &maptype=roadmap
-    &markers=color:red|{latitude},{longitude}
-    &style=feature:road|element:geometry|color:0x38414e
-    &style=feature:road.arterial|element:labels|visibility:on
-    &key={GOOGLE_MAPS_API_KEY}
-  ```
-- Note: Traffic layer requires JavaScript API, so we'll use styled roadmap with traffic-like colors
-- Alternative: Use Distance Matrix API to get travel time as traffic indicator
+**OpenWeatherMap Integration (requests library):**
+- Use Current Weather Data API
+- Endpoint: `https://api.openweathermap.org/data/2.5/weather`
+- Query parameters:
+  - `lat`: incident latitude
+  - `lon`: incident longitude
+  - `appid`: API key from environment
+  - `units`: metric (Celsius)
+- Extract: temperature, feels_like, humidity, pressure, weather description, icon code, wind speed, clouds
+- Timeout: 5 seconds
+- Handle rate limiting (60 calls per minute on free tier)
 
 **RSS Feed Integration (feedparser library):**
 - Parse configured RSS feed URL from environment variable
 - Extract fields: `title`, `link`, `published` (or `pubDate`)
 - Limit to 5 most recent items
 - Handle various RSS/Atom formats automatically with feedparser
+- Gracefully handle malformed feeds
 
 ## Data Models
 
@@ -211,22 +216,39 @@ Modal Overlay (dark background)
 ```python
 {
   "incident_id": int,
-  "twitter_posts": List[TwitterPost],
-  "traffic_map_url": str,
+  "reddit_posts": List[RedditPost],
+  "weather_data": Optional[WeatherData],
   "news_items": List[NewsItem],
   "errors": Dict[str, Optional[str]]
 }
 ```
 
-### TwitterPost (New)
+### RedditPost (New)
 
 ```python
 {
   "id": str,
-  "username": str,
-  "text": str,
+  "username": str,  # "u/username"
+  "text": str,  # post title
   "created_at": str (ISO 8601),
-  "location": Optional[str]  # "lat,long" if available
+  "subreddit": str,  # "r/subreddit"
+  "url": str  # full Reddit URL
+}
+```
+
+### WeatherData (New)
+
+```python
+{
+  "temperature": float,  # Celsius
+  "feels_like": float,
+  "humidity": int,  # percentage
+  "pressure": int,  # hPa
+  "description": str,  # "partly cloudy"
+  "icon": str,  # OpenWeatherMap icon code
+  "wind_speed": float,  # m/s
+  "clouds": int,  # percentage
+  "location": str  # city name
 }
 ```
 
@@ -323,8 +345,10 @@ Modal Overlay (dark background)
 
 **Required Environment Variables:**
 - Backend `.env`:
-  - `TWITTER_BEARER_TOKEN` (Twitter API v2 Bearer Token)
-  - `GOOGLE_MAPS_API_KEY` (Google Maps Static API key)
+  - `REDDIT_CLIENT_ID` (Reddit app client ID)
+  - `REDDIT_CLIENT_SECRET` (Reddit app client secret)
+  - `REDDIT_USER_AGENT` (Reddit app user agent string)
+  - `OPENWEATHERMAP_API_KEY` (OpenWeatherMap API key)
   - `RSS_FEED_URL` (Local news RSS feed URL)
   - Existing: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET`
 
@@ -373,14 +397,14 @@ Modal Overlay (dark background)
 
 **New Python Dependencies (requirements.txt):**
 ```
-tweepy==4.14.0
-googlemaps==4.10.0
+praw==7.7.1
 feedparser==6.0.10
+requests==2.31.0
 ```
 
 **Installation Command:**
 ```bash
-pip install tweepy googlemaps feedparser
+pip install praw feedparser requests
 ```
 
 **No New Frontend Dependencies Required** (uses existing React, axios, sweetalert2)
@@ -417,26 +441,27 @@ pip install tweepy googlemaps feedparser
 - Graceful degradation if one service is slow
 - Python GIL not an issue for I/O-bound operations
 
-### Static Map vs. Interactive Map
+### OpenWeatherMap vs. Google Maps for Environmental Data
 
-**Decision:** Use Google Maps Static API
-
-**Rationale:**
-- Simpler implementation (just an image URL)
-- No need for Google Maps JavaScript SDK
-- Faster loading (no client-side map rendering)
-- Sufficient for quick traffic assessment
-- Reduces frontend bundle size
-
-### Twitter API v2 vs. v1.1
-
-**Decision:** Use Twitter API v2
+**Decision:** Use OpenWeatherMap API for weather instead of Google Maps for traffic
 
 **Rationale:**
-- v1.1 is deprecated
-- v2 has better geolocation search capabilities
-- OAuth 2.0 Bearer Token is simpler than v1.1 OAuth 1.0a
-- Better rate limits for search endpoint
+- Weather data is more relevant for incident validation than traffic
+- OpenWeatherMap has generous free tier (60 calls/minute, 1000/day)
+- No API key approval process required
+- Simple REST API with requests library (no special SDK needed)
+- Weather conditions help assess incident severity and environmental factors
+
+### Reddit vs. Twitter for Social Media
+
+**Decision:** Use Reddit API instead of Twitter
+
+**Rationale:**
+- Reddit API is free and easier to access (no approval process)
+- Emergency-related subreddits provide relevant content
+- praw library simplifies authentication and API calls
+- No geolocation search needed (subreddit-based is sufficient)
+- Better rate limits on free tier (60 requests/minute)
 
 ### RSS Feed Configuration
 

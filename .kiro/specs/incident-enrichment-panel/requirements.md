@@ -2,16 +2,16 @@
 
 ## Introduction
 
-The Incident Enrichment Panel feature enhances the PhantomOps admin experience by providing real-time, multi-source validation data for reported incidents. When an admin clicks on an incident in the AdminDashboard, a modal panel displays enriched context from three external sources: social media posts, traffic conditions, and local news feeds. This feature enables admins to quickly validate incident authenticity and assess real-world impact, transforming PhantomOps from a simple reporting tool into an intelligent incident validation platform.
+The Incident Enrichment Panel feature enhances the PhantomOps admin experience by providing real-time, multi-source validation data for reported incidents. When an admin clicks on an incident in the AdminDashboard, a modal panel displays enriched context from three external sources: social media posts, weather conditions, and local news feeds. This feature enables admins to quickly validate incident authenticity and assess real-world impact, transforming PhantomOps from a simple reporting tool into an intelligent incident validation platform.
 
 ## Glossary
 
 - **EnrichmentPanel**: The React modal component that displays aggregated external data for a specific incident
 - **AdminDashboard**: The existing React component where admins view and manage all reported incidents
-- **EnrichmentAPI**: The new backend API endpoint that aggregates data from Twitter, Google Maps, and RSS feeds
+- **EnrichmentAPI**: The new backend API endpoint that aggregates data from Reddit, OpenWeatherMap, and RSS feeds
 - **IncidentRecord**: A database record containing incident details including geolocation (latitude/longitude)
-- **GeotaggedTweet**: A Twitter/X post that includes location metadata within a specified radius
-- **TrafficMap**: A static Google Maps image showing current traffic conditions at a specific location
+- **RedditPost**: A Reddit post from emergency-related subreddits
+- **WeatherData**: Current weather conditions from OpenWeatherMap API at the incident location
 - **NewsFeedItem**: An entry from a local news RSS feed
 
 ## Requirements
@@ -30,27 +30,27 @@ The Incident Enrichment Panel feature enhances the PhantomOps admin experience b
 
 ### Requirement 2
 
-**User Story:** As an admin, I want to see recent social media posts near the incident location, so that I can validate the incident against real-time public reports
+**User Story:** As an admin, I want to see recent social media posts related to emergencies, so that I can validate the incident against real-time public reports
 
 #### Acceptance Criteria
 
-1. THE EnrichmentAPI SHALL fetch up to 5 tweets from Twitter/X API
-2. THE EnrichmentAPI SHALL filter tweets posted within the last 24 hours
-3. THE EnrichmentAPI SHALL filter tweets geotagged within 2 kilometers of the IncidentRecord latitude and longitude
-4. THE EnrichmentPanel SHALL display each GeotaggedTweet with its text content, timestamp, and author username
-5. IF no tweets are found within the search parameters, THEN THE EnrichmentPanel SHALL display a "No social media posts found" message
+1. THE EnrichmentAPI SHALL fetch up to 5 posts from Reddit API
+2. THE EnrichmentAPI SHALL search emergency-related subreddits (news, worldnews, emergencies, PublicFreakout)
+3. THE EnrichmentAPI SHALL filter posts posted within the last 24 hours
+4. THE EnrichmentPanel SHALL display each RedditPost with its title, timestamp, author username, and subreddit
+5. IF no posts are found within the search parameters, THEN THE EnrichmentPanel SHALL display a "No social media posts found" message
 
 ### Requirement 3
 
-**User Story:** As an admin, I want to see current traffic conditions at the incident location, so that I can assess the incident's real-world impact on transportation
+**User Story:** As an admin, I want to see current weather conditions at the incident location, so that I can assess environmental factors affecting the incident
 
 #### Acceptance Criteria
 
-1. THE EnrichmentAPI SHALL request a static map image from Google Maps Static API
-2. THE EnrichmentAPI SHALL center the map on the IncidentRecord latitude and longitude
-3. THE EnrichmentAPI SHALL include the traffic layer in the map image request
-4. THE EnrichmentPanel SHALL display the TrafficMap as an embedded image
-5. IF the Google Maps API request fails, THEN THE EnrichmentAPI SHALL return an error indicator for the traffic section
+1. THE EnrichmentAPI SHALL request weather data from OpenWeatherMap API
+2. THE EnrichmentAPI SHALL use the IncidentRecord latitude and longitude coordinates
+3. THE EnrichmentAPI SHALL retrieve temperature, humidity, wind speed, weather description, and weather icon
+4. THE EnrichmentPanel SHALL display the WeatherData with temperature, conditions, and relevant metrics
+5. IF the OpenWeatherMap API request fails, THEN THE EnrichmentAPI SHALL return an error indicator for the weather section
 
 ### Requirement 4
 
@@ -72,8 +72,8 @@ The Incident Enrichment Panel feature enhances the PhantomOps admin experience b
 
 1. THE EnrichmentAPI SHALL expose a single endpoint at `/api/incidents/<incident_id>/enrich`
 2. THE EnrichmentAPI SHALL require JWT authentication using the verify_jwt_from_request decorator
-3. THE EnrichmentAPI SHALL fetch data from all three external sources (Twitter, Google Maps, RSS) in parallel or sequentially
-4. THE EnrichmentAPI SHALL return a single JSON response containing twitter_posts, traffic_map_url, and news_items fields
+3. THE EnrichmentAPI SHALL fetch data from all three external sources (Reddit, OpenWeatherMap, RSS) in parallel using ThreadPoolExecutor
+4. THE EnrichmentAPI SHALL return a single JSON response containing reddit_posts, weather_data, and news_items fields
 5. IF any individual external service fails, THEN THE EnrichmentAPI SHALL return partial data with null or empty values for the failed service
 
 ### Requirement 6
@@ -82,10 +82,10 @@ The Incident Enrichment Panel feature enhances the PhantomOps admin experience b
 
 #### Acceptance Criteria
 
-1. THE EnrichmentAPI SHALL use a standard Python library for Twitter/X API integration (e.g., tweepy or requests-oauthlib)
-2. THE EnrichmentAPI SHALL use a standard Python library for Google Maps API integration (e.g., googlemaps)
-3. THE EnrichmentAPI SHALL use a standard Python library for RSS feed parsing (e.g., feedparser)
-4. THE backend .env file SHALL include new environment variables for Twitter API credentials, Google Maps API key, and RSS feed URL
+1. THE EnrichmentAPI SHALL use the praw library for Reddit API integration
+2. THE EnrichmentAPI SHALL use the requests library for OpenWeatherMap API integration
+3. THE EnrichmentAPI SHALL use the feedparser library for RSS feed parsing
+4. THE backend .env file SHALL include new environment variables for Reddit API credentials, OpenWeatherMap API key, and RSS feed URL
 5. THE EnrichmentAPI SHALL handle API authentication and rate limiting according to each service's requirements
 
 ### Requirement 7
