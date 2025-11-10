@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import "../styles/halloween.css";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -59,59 +60,103 @@ const Signup = () => {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "80px auto", textAlign: "center" }}>
-      <h2>🆕 Sign Up for PhantomOps</h2>
-      <form onSubmit={handleSignup}>
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "8px",
-            cursor: "pointer",
-            backgroundColor: "#22c55e",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-          }}
-        >
-          {loading ? "Creating account..." : "Sign Up"}
-        </button>
-      </form>
+    <div style={{ 
+      minHeight: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
+      position: "relative",
+      overflow: "hidden"
+    }}>
+      {/* Floating Decorations */}
+      <div className="floating-ghost" style={{ top: "15%", left: "8%" }}>🕷️</div>
+      <div className="floating-ghost" style={{ top: "25%", right: "12%", animationDelay: "3s" }}>🦇</div>
+      <div className="pumpkin-decoration" style={{ bottom: "12%", left: "8%" }}>🎃</div>
+      <div className="pumpkin-decoration" style={{ bottom: "18%", right: "15%", animationDelay: "2s" }}>💀</div>
+      
+      <div className="halloween-card" style={{ 
+        maxWidth: "450px", 
+        width: "90%",
+        padding: "3rem 2rem",
+        textAlign: "center",
+        position: "relative"
+      }}>
+        <div className="cobweb-corner" />
+        
+        <h1 className="halloween-section-header spooky-text" style={{ 
+          justifyContent: "center",
+          fontSize: "2.5rem",
+          marginBottom: "0.5rem"
+        }}>
+          👻 Join the Haunting 🎃
+        </h1>
+        
+        <p style={{ 
+          color: "var(--halloween-orange)", 
+          marginBottom: "2rem",
+          fontSize: "1.1rem",
+          textShadow: "0 0 10px rgba(255, 107, 53, 0.5)"
+        }}>
+          Become a phantom operative... 🕸️
+        </p>
+        
+        <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <input
+            type="text"
+            placeholder="👤 Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="halloween-input"
+            style={{ width: "100%" }}
+          />
+          <input
+            type="email"
+            placeholder="📧 Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="halloween-input"
+            style={{ width: "100%" }}
+          />
+          <input
+            type="password"
+            placeholder="🔒 Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="halloween-input"
+            style={{ width: "100%" }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="halloween-button-success pulse-glow"
+            style={{ width: "100%", marginTop: "1rem" }}
+          >
+            {loading ? "🕸️ Summoning spirit..." : "👻 Join PhantomOps"}
+          </button>
+        </form>
 
-      <p style={{ marginTop: "1rem", color: "#9ca3af" }}>
-        Already have an account?{" "}
-        <span
-          onClick={() => navigate("/")}
-          style={{ color: "#3b82f6", cursor: "pointer", textDecoration: "underline" }}
-        >
-          Login
-        </span>
-      </p>
+        <p style={{ 
+          marginTop: "2rem", 
+          color: "var(--halloween-ghost-white)",
+          opacity: 0.7
+        }}>
+          Already haunting with us?{" "}
+          <span
+            onClick={() => navigate("/")}
+            style={{ 
+              color: "var(--halloween-orange)", 
+              cursor: "pointer", 
+              textDecoration: "underline",
+              textShadow: "0 0 10px rgba(255, 107, 53, 0.5)"
+            }}
+          >
+            Return to login 🎃
+          </span>
+        </p>
+      </div>
     </div>
   );
 };

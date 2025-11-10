@@ -1,19 +1,18 @@
-// src/components/LogoutButton.jsx
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../utils/supabaseClient";
+import "../styles/halloween.css";
 
 const LogoutButton = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut(); // end Supabase session
+      await supabase.auth.signOut();
       sessionStorage.removeItem("jwt");
       sessionStorage.removeItem("user");
       sessionStorage.removeItem("role");
 
-      navigate("/login"); // redirect to login
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error.message);
       alert("Something went wrong while logging out.");
@@ -23,17 +22,13 @@ const LogoutButton = () => {
   return (
     <button
       onClick={handleLogout}
+      className="halloween-button-danger"
       style={{
-        background: "#dc3545",
-        color: "#fff",
-        padding: "8px 14px",
-        border: "none",
-        borderRadius: "8px",
-        cursor: "pointer",
+        padding: "10px 20px",
         fontWeight: "bold",
       }}
     >
-      Logout
+      👻 Vanish
     </button>
   );
 };

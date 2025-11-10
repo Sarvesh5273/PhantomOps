@@ -1,0 +1,7 @@
+Flask
+Flask-CORS
+python-dotenv
+PyJWT
+supabase
+praw
+feedparser

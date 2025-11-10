@@ -1,12 +1,36 @@
 from flask import Blueprint, request, jsonify
 from config.supabase_client import supabase
+from auth_utils import verify_jwt_from_request
 from datetime import datetime
+import os
+from supabase import create_client, Client
 
 incidents_bp = Blueprint('incidents_bp', __name__)
+
+def get_supabase_with_jwt():
+    """Create a Supabase client with the user's JWT token for RLS"""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        jwt_token = auth_header.split(" ")[1]
+        # Create a new client with custom headers including JWT
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_ANON_KEY")
+        
+        # Create client and manually set auth header
+        client: Client = create_client(url, key)
+        # Override the postgrest client headers to include JWT
+        client.postgrest.auth(jwt_token)
+        return client
+    return supabase  # Fallback to default client
 
 # 🧾 Report a new incident
 @incidents_bp.route('/api/incidents', methods=['POST'])
 def report_incident():
+    # Verify JWT first
+    decoded, err, code = verify_jwt_from_request()
+    if err:
+        return err, code
+    
     try:
         data = request.get_json(force=True)
 
@@ -27,8 +51,9 @@ def report_incident():
         if not incident_data["user_id"] or not incident_data["name"] or not incident_data["description"]:
             return jsonify({"error": "Missing required fields (user_id, name, or description)."}), 400
 
-        # Insert into Supabase
-        response = supabase.table("incidents").insert(incident_data).execute()
+        # Use Supabase client with JWT token for RLS
+        supabase_with_jwt = get_supabase_with_jwt()
+        response = supabase_with_jwt.table("incidents").insert(incident_data).execute()
 
         return jsonify({
             "message": "✅ Incident reported successfully!",
@@ -42,17 +67,31 @@ def report_incident():
 # 📡 Get all incidents
 @incidents_bp.route('/api/incidents', methods=['GET'])
 def get_incidents():
+    # Verify JWT first
+    decoded, err, code = verify_jwt_from_request()
+    if err:
+        return err, code
+    
     try:
-        response = supabase.table("incidents").select("*").order("created_at", desc=True).execute()
-        return jsonify(response.data), 200
+        # Use Supabase client with JWT token for RLS
+        supabase_with_jwt = get_supabase_with_jwt()
+        response = supabase_with_jwt.table("incidents").select("*").order("created_at", desc=True).execute()
+        return jsonify({"incidents": response.data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # ✅ Mark an incident as resolved
 @incidents_bp.route("/api/incidents/<int:incident_id>/resolve", methods=["PATCH"])
 def resolve_incident(incident_id):
+    # Verify JWT first
+    decoded, err, code = verify_jwt_from_request()
+    if err:
+        return err, code
+    
     try:
-        response = supabase.table("incidents") \
+        # Use Supabase client with JWT token for RLS
+        supabase_with_jwt = get_supabase_with_jwt()
+        response = supabase_with_jwt.table("incidents") \
             .update({"status": "resolved"}) \
             .eq("id", incident_id) \
             .execute()

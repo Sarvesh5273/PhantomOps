@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { apiClient } from "../utils/apiClient";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import "../styles/balanced-halloween.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -95,10 +96,6 @@ const Login = () => {
         showConfirmButton: false,
       });
 
-      // 🔟 Redirect based on role
-      if (role === "admin") navigate("/admin", { replace: true });
-      else navigate("/user", { replace: true });
-
     } catch (err) {
       console.error("❌ Login error:", err);
       Swal.fire({
@@ -118,41 +115,98 @@ const Login = () => {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "80px auto", textAlign: "center" }}>
-      <h2>🔐 Login to PhantomOps</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "8px",
-            cursor: "pointer",
-            backgroundColor: "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-          }}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+    <div style={{ 
+      minHeight: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
+      position: "relative",
+      padding: "2rem"
+    }}>
+      {/* Subtle Halloween Accent */}
+      <div className="subtle-decoration" style={{ top: "10%", left: "5%" }}>🎃</div>
+      <div className="subtle-decoration" style={{ bottom: "10%", right: "5%", animationDelay: "10s" }}>🎃</div>
+      
+      <div className="professional-card" style={{ 
+        maxWidth: "450px", 
+        width: "100%",
+        padding: "3rem 2.5rem",
+        position: "relative"
+      }}>
+        {/* Subtle Halloween indicator */}
+        <div className="halloween-accent">🎃</div>
+        
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <h1 className="page-header" style={{ 
+            justifyContent: "center",
+            fontSize: "2.2rem",
+            marginBottom: "0.5rem"
+          }}>
+            <span className="accent">Phantom</span>Ops
+          </h1>
+          
+          <p style={{ 
+            color: "#9ca3af", 
+            fontSize: "1rem",
+            marginTop: "0.5rem"
+          }}>
+            Public Safety Operations Platform
+          </p>
+        </div>
+        
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+          <div>
+            <input
+              type="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="input-field"
+            />
+          </div>
+          
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="input-field"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary"
+            style={{ marginTop: "0.5rem" }}
+          >
+            {loading ? "Authenticating..." : "Sign In"}
+          </button>
+        </form>
+        
+        <p style={{ 
+          marginTop: "2rem", 
+          color: "#9ca3af",
+          textAlign: "center",
+          fontSize: "0.95rem"
+        }}>
+          New to PhantomOps?{" "}
+          <span
+            onClick={() => navigate("/signup")}
+            style={{ 
+              color: "var(--accent-orange)", 
+              cursor: "pointer", 
+              textDecoration: "underline",
+              fontWeight: 600
+            }}
+          >
+            Create Account
+          </span>
+        </p>
+      </div>
     </div>
   );
 };
