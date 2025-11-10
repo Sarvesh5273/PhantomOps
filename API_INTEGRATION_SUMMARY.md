@@ -27,7 +27,7 @@ REDDIT_USER_AGENT="PhantomOps v0.1 by /u/Powerful-Phone-8782"
 **Status:** ✅ Configured  
 **Credentials in `.env`:**
 ```env
-OPENWEATHERMAP_API_KEY=6c31d6bfff3204a47e20dad4177fd30c
+
 ```
 
 **What it does:**
